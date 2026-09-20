@@ -1,43 +1,64 @@
 <!doctype html>
 <!--
   Evidence packet. OWNER: Person C.
-  Plain CSS only — xhtml2pdf supports a small subset. No flexbox, no grid.
-  Images use an absolute filesystem path (issue.photos[].abs_path), set in main.py.
+  Plain CSS only — xhtml2pdf supports a small subset. No flexbox, no grid, no
+  border-collapse. Photos carry an absolute filesystem path and an explicit
+  width/height, both set by pdf.prepare_photos() — `max-width` is not honoured
+  here and lets a portrait photo overflow the page.
 -->
 <html>
 <head>
 <meta charset="utf-8">
 <style>
-  @page { size: letter portrait; margin: 0.9in 0.85in; }
+  @page {
+    size: letter portrait;
+    margin: 0.9in 0.85in 1.05in 0.85in;
+    @frame footer {
+      -pdf-frame-content: pageFooter;
+      bottom: 0.5in; left: 0.85in; width: 6.8in; height: 0.35in;
+    }
+  }
   body  { font-family: Helvetica, Arial, sans-serif; font-size: 10.5pt; color: #1c1917; }
   h1    { font-size: 20pt; margin: 0 0 2pt 0; }
   h2    { font-size: 11pt; text-transform: uppercase; letter-spacing: 1px;
           color: #78716c; border-bottom: 1px solid #d6d3d1; padding-bottom: 3pt;
           margin: 22pt 0 8pt 0; }
-  .sub  { color: #57534e; font-size: 10pt; margin: 0 0 18pt 0; }
-  table { width: 100%; border-collapse: collapse; }
+  h2.first { margin-top: 0; }
+  .sub  { color: #57534e; font-size: 10pt; margin: 0 0 4pt 0; }
+  .id   { color: #78716c; font-size: 9pt; margin: 0 0 18pt 0; }
+  table { width: 100%; }
   td    { padding: 3pt 0; vertical-align: top; font-size: 10pt; }
   td.k  { color: #78716c; width: 32%; }
-  .letter { font-family: Courier, monospace; font-size: 9pt; white-space: pre;
-            border: 1px solid #d6d3d1; padding: 12pt; }
-  .cap  { color: #78716c; font-size: 8.5pt; margin: 4pt 0 16pt 0; }
-  .note { border: 1px solid #fcd34d; background: #fffbeb; padding: 10pt;
-          font-size: 9pt; color: #78350f; margin-top: 22pt; }
-  img   { max-width: 100%; }
+  /* A left rule rather than a box: a long notice runs onto a second page, and a
+     four-sided border there reads as two separate documents. Tight leading keeps
+     a typical one-page notice on one page. */
+  .letter { font-family: Courier, monospace; font-size: 8.5pt; line-height: 9.8pt;
+            white-space: pre; border-left: 2px solid #d6d3d1; padding-left: 12pt; }
+  /* Each photo travels with its own caption — never split across a page. */
+  .photo { page-break-inside: avoid; margin-bottom: 16pt; }
+  .cap  { color: #78716c; font-size: 8.5pt; margin: 4pt 0 0 0; }
+  .capn { color: #1c1917; font-size: 9pt; margin: 0 0 4pt 0; }
+  /* Never split: half a disclaimer on each of two pages reads as a mistake. */
+  .note { border: 1px solid #fcd34d; background: #fffbeb; padding: 9pt;
+          font-size: 8.5pt; color: #78350f; margin-top: 14pt;
+          page-break-inside: avoid; }
+  .foot { color: #a8a29e; font-size: 8pt; }
+  .break { page-break-before: always; }
 </style>
 </head>
 <body>
 
 <h1>Repair Documentation Packet</h1>
-<p class="sub">{{ issue.unit_address }} &middot; generated {{ generated_at[:16]|replace("T", " ") }} UTC</p>
+<p class="sub">{{ issue.unit_address }}</p>
+<p class="id">Record {{ issue.id }} &middot; generated {{ generated_at[:16]|replace("T", " ") }} UTC</p>
 
 <h2>Summary</h2>
 <table>
-  <tr><td class="k">Tenant</td><td>{{ issue.tenant_name }} &middot; {{ issue.tenant_contact }}</td></tr>
+  <tr><td class="k">Tenant</td><td>{{ issue.tenant_name or "—" }}{% if issue.tenant_contact %} &middot; {{ issue.tenant_contact }}{% endif %}</td></tr>
   <tr><td class="k">Unit</td><td>{{ issue.unit_address }}</td></tr>
-  <tr><td class="k">Landlord</td><td>{{ issue.landlord_name }}<br>{{ issue.landlord_address }}</td></tr>
-  <tr><td class="k">Category</td><td>{{ issue.classification.category|replace("_", " ") }}
-      ({{ issue.classification.severity }} severity)</td></tr>
+  <tr><td class="k">Landlord</td><td>{{ issue.landlord_name or "—" }}{% if issue.landlord_address %}<br>{{ issue.landlord_address }}{% endif %}</td></tr>
+  <tr><td class="k">Category</td><td>{{ issue.classification.category|category }}
+      &mdash; {{ issue.classification.severity }} severity</td></tr>
   <tr><td class="k">Habitability</td>
       <td>{{ "Yes — " ~ issue.classification.rationale if issue.classification.habitability else "No" }}</td></tr>
   <tr><td class="k">First documented</td><td>{{ issue.created_at[:16]|replace("T", " ") }} UTC</td></tr>
@@ -58,19 +79,24 @@
   {% endfor %}
 </table>
 
-<h2>Photographic evidence</h2>
+{% if issue.photos %}
+<div class="break"></div>
+<h2 class="first">Photographic evidence</h2>
 {% for p in issue.photos %}
-  <img src="{{ p.abs_path }}">
-  <p class="cap">
-    Recorded by server {{ p.captured_at[:19]|replace("T", " ") }} UTC<br>
-    SHA-256: {{ p.sha256 }}
-  </p>
-{% else %}
-  <p>No photographs attached.</p>
+  <div class="photo">
+    <p class="capn">Photograph {{ loop.index }} of {{ issue.photos|length }}</p>
+    <img src="{{ p.abs_path }}" style="{{ p.img_style }}">
+    <p class="cap">
+      Recorded by server {{ p.captured_at[:19]|replace("T", " ") }} UTC<br>
+      SHA-256: {{ p.sha256 }}
+    </p>
+  </div>
 {% endfor %}
+{% endif %}
 
 {% if issue.notice.letter_text %}
-<h2>Written notice</h2>
+<div class="break"></div>
+<h2 class="first">Written notice</h2>
 <div class="letter">{{ issue.notice.letter_text | wrap(68) }}</div>
 {% endif %}
 
@@ -78,8 +104,12 @@
   <strong>This packet is documentation, not legal advice.</strong><br>
   It records conditions reported by the tenant, with server-recorded timestamps and
   content hashes, and includes a template notice. {{ statute }}
-  For advice about a specific situation, contact UF Student Legal Services
+  For advice about a specific situation, contact <a href="https://studentlegalservices.ufl.edu/services/">UF Student Legal Services</a>
   (UF students) or Three Rivers Legal Services.
+</div>
+
+<div id="pageFooter" class="foot">
+  RepairRecord &middot; {{ issue.id }} &middot; page <pdf:pagenumber> of <pdf:pagecount>
 </div>
 
 </body>

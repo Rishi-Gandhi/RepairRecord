@@ -65,6 +65,12 @@ def list_all() -> list[dict[str, Any]]:
     return [json.loads(r["data"]) for r in rows]
 
 
-def add_event(issue: dict[str, Any], type_: str, note: str) -> dict[str, Any]:
-    issue.setdefault("events", []).append({"type": type_, "at": now_iso(), "note": note})
+def add_event(
+    issue: dict[str, Any], type_: str, note: str, at: str | None = None
+) -> dict[str, Any]:
+    """Append an event. `at` exists only so seed.py can build a backdated demo
+    timeline; routes must never pass it, or the record stops being server-timed."""
+    issue.setdefault("events", []).append(
+        {"type": type_, "at": at or now_iso(), "note": note}
+    )
     return issue
