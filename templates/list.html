@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="flex items-center justify-between">
+  <h1 class="text-2xl font-semibold tracking-tight">My issues</h1>
+  <a href="/" class="rounded-lg bg-stone-900 px-3 py-2 text-sm font-medium text-white">New</a>
+</div>
+
+<div class="mt-5 space-y-3">
+  {% for issue in issues %}
+    {% set n = issue.notice %}
+    {% set days = n.cure_deadline | days_remaining %}
+    <a href="/issues/{{ issue.id }}"
+       class="flex gap-4 rounded-lg bg-white p-3 ring-1 ring-stone-200 hover:ring-stone-400">
+      {% if issue.photos %}
+        <img src="{{ issue.photos[0].path }}" alt=""
+             class="h-16 w-16 shrink-0 rounded object-cover">
+      {% else %}
+        <div class="h-16 w-16 shrink-0 rounded bg-stone-100"></div>
+      {% endif %}
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center gap-2">
+          <span class="font-medium capitalize">{{ issue.classification.category|replace("_"," ") }}</span>
+          {% if issue.classification.habitability %}
+            <span class="rounded-full bg-red-100 px-2 py-0.5 text-[11px] text-red-800">Habitability</span>
+          {% endif %}
+        </div>
+        <p class="truncate text-sm text-stone-500">{{ issue.description }}</p>
+        <p class="mt-0.5 text-xs font-medium">
+          {% if days is not none %}
+            Notice delivered · {{ days }} days until cure deadline
+          {% elif n.letter_text %}
+            Notice drafted · not yet delivered
+          {% else %}
+            Documented {{ issue.created_at[:10] }}
+          {% endif %}
+        </p>
+      </div>
+    </a>
+  {% else %}
+    <p class="rounded-lg bg-white p-6 text-center text-sm text-stone-500 ring-1 ring-stone-200">
+      Nothing documented yet. <a href="/" class="underline">Start with a photo.</a>
+    </p>
+  {% endfor %}
+</div>
+
+{% endblock %}

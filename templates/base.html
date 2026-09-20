@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}RepairRecord{% endblock %}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="bg-stone-50 text-stone-900 antialiased">
+  <header class="border-b border-stone-200 bg-white">
+    <div class="mx-auto flex max-w-2xl items-center justify-between px-4 py-3">
+      <a href="/" class="font-semibold tracking-tight">RepairRecord</a>
+      <a href="/issues" class="text-sm text-stone-500 hover:text-stone-900">My issues</a>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-2xl px-4 py-6">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="mx-auto max-w-2xl px-4 pb-10">
+    <div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+      <p class="font-medium">RepairRecord is documentation, not legal advice.</p>
+      <p class="mt-1 text-amber-800">
+        It records what happened and prepares a template notice. For advice about
+        your situation, talk to
+        <a class="underline" href="https://studentlegalservices.ufsg.ufl.edu/">UF Student Legal Services</a>
+        (UF students) or
+        <a class="underline" href="https://www.trls.org/">Three Rivers Legal Services</a>.
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

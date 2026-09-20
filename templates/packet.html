@@ -1,0 +1,86 @@
+<!doctype html>
+<!--
+  Evidence packet. OWNER: Person C.
+  Plain CSS only — xhtml2pdf supports a small subset. No flexbox, no grid.
+  Images use an absolute filesystem path (issue.photos[].abs_path), set in main.py.
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: letter portrait; margin: 0.9in 0.85in; }
+  body  { font-family: Helvetica, Arial, sans-serif; font-size: 10.5pt; color: #1c1917; }
+  h1    { font-size: 20pt; margin: 0 0 2pt 0; }
+  h2    { font-size: 11pt; text-transform: uppercase; letter-spacing: 1px;
+          color: #78716c; border-bottom: 1px solid #d6d3d1; padding-bottom: 3pt;
+          margin: 22pt 0 8pt 0; }
+  .sub  { color: #57534e; font-size: 10pt; margin: 0 0 18pt 0; }
+  table { width: 100%; border-collapse: collapse; }
+  td    { padding: 3pt 0; vertical-align: top; font-size: 10pt; }
+  td.k  { color: #78716c; width: 32%; }
+  .letter { font-family: Courier, monospace; font-size: 9pt; white-space: pre;
+            border: 1px solid #d6d3d1; padding: 12pt; }
+  .cap  { color: #78716c; font-size: 8.5pt; margin: 4pt 0 16pt 0; }
+  .note { border: 1px solid #fcd34d; background: #fffbeb; padding: 10pt;
+          font-size: 9pt; color: #78350f; margin-top: 22pt; }
+  img   { max-width: 100%; }
+</style>
+</head>
+<body>
+
+<h1>Repair Documentation Packet</h1>
+<p class="sub">{{ issue.unit_address }} &middot; generated {{ generated_at[:16]|replace("T", " ") }} UTC</p>
+
+<h2>Summary</h2>
+<table>
+  <tr><td class="k">Tenant</td><td>{{ issue.tenant_name }} &middot; {{ issue.tenant_contact }}</td></tr>
+  <tr><td class="k">Unit</td><td>{{ issue.unit_address }}</td></tr>
+  <tr><td class="k">Landlord</td><td>{{ issue.landlord_name }}<br>{{ issue.landlord_address }}</td></tr>
+  <tr><td class="k">Category</td><td>{{ issue.classification.category|replace("_", " ") }}
+      ({{ issue.classification.severity }} severity)</td></tr>
+  <tr><td class="k">Habitability</td>
+      <td>{{ "Yes — " ~ issue.classification.rationale if issue.classification.habitability else "No" }}</td></tr>
+  <tr><td class="k">First documented</td><td>{{ issue.created_at[:16]|replace("T", " ") }} UTC</td></tr>
+  {% if issue.notice.sent_at %}
+  <tr><td class="k">Notice delivered</td>
+      <td>{{ issue.notice.sent_at[:16]|replace("T", " ") }} UTC &middot; {{ issue.notice.delivery_method }}</td></tr>
+  <tr><td class="k">Cure deadline</td><td>{{ issue.notice.cure_deadline[:10] }}</td></tr>
+  {% endif %}
+</table>
+
+<h2>Tenant's account</h2>
+<p>{{ issue.description }}</p>
+
+<h2>Record of events</h2>
+<table>
+  {% for e in issue.events %}
+  <tr><td class="k">{{ e.at[:16]|replace("T", " ") }} UTC</td><td>{{ e.note }}</td></tr>
+  {% endfor %}
+</table>
+
+<h2>Photographic evidence</h2>
+{% for p in issue.photos %}
+  <img src="{{ p.abs_path }}">
+  <p class="cap">
+    Recorded by server {{ p.captured_at[:19]|replace("T", " ") }} UTC<br>
+    SHA-256: {{ p.sha256 }}
+  </p>
+{% else %}
+  <p>No photographs attached.</p>
+{% endfor %}
+
+{% if issue.notice.letter_text %}
+<h2>Written notice</h2>
+<div class="letter">{{ issue.notice.letter_text | wrap(68) }}</div>
+{% endif %}
+
+<div class="note">
+  <strong>This packet is documentation, not legal advice.</strong><br>
+  It records conditions reported by the tenant, with server-recorded timestamps and
+  content hashes, and includes a template notice. {{ statute }}
+  For advice about a specific situation, contact UF Student Legal Services
+  (UF students) or Three Rivers Legal Services.
+</div>
+
+</body>
+</html>

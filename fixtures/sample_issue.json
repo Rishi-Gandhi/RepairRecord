@@ -1,0 +1,34 @@
+{
+  "id": "iss_sample",
+  "created_at": "2026-09-20T11:04:22+00:00",
+  "tenant_name": "Jordan Ruiz",
+  "tenant_contact": "jordan.ruiz@example.com | (352) 555-0142",
+  "unit_address": "1204 SW 3rd Ave, Apt 7, Gainesville, FL 32601",
+  "landlord_name": "Oakline Property Management",
+  "landlord_address": "PO Box 4412, Gainesville, FL 32602",
+  "description": "AC stopped blowing cold air 9 days ago. Apartment is 88F inside. Reported by text on Sept 11 and Sept 14, no response.",
+  "photos": [
+    {
+      "id": "ph_sample_1",
+      "path": "/uploads/sample_hvac.jpg",
+      "captured_at": "2026-09-20T11:04:22+00:00",
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ],
+  "classification": {
+    "category": "hvac",
+    "habitability": true,
+    "severity": "high",
+    "rationale": "Loss of cooling during extreme heat affects the habitability of the unit."
+  },
+  "notice": {
+    "letter_text": null,
+    "generated_at": null,
+    "delivery_method": null,
+    "sent_at": null,
+    "cure_deadline": null
+  },
+  "events": [
+    { "type": "reported", "at": "2026-09-20T11:04:22+00:00", "note": "Issue documented in RepairRecord" }
+  ]
+}

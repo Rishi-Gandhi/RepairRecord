@@ -1,0 +1,13 @@
+/* PERSON A: Tailwind CDN handles almost everything. Put only overrides here. */
+
+/* Tailwind's CDN build ships no forms plugin; make file inputs less ugly. */
+input[type="file"]::file-selector-button {
+  margin-right: 0.75rem;
+  border: 0;
+  border-radius: 0.375rem;
+  background: #1c1917;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
