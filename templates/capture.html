@@ -16,7 +16,19 @@
     <p class="mt-1 text-sm leading-5 text-stone-500">Show the condition as clearly as you can.</p>
     <input id="photo" type="file" name="photo" accept="image/*" capture="environment"
            class="mt-4 block min-h-12 w-full rounded-lg border border-stone-300 bg-stone-50 p-3 text-sm">
-    <p class="mt-2 text-xs text-stone-500">On a phone, this opens your camera.</p>
+    <p id="photo_hint" class="mt-2 text-xs text-stone-500">On a phone, this opens your camera.</p>
+
+    <div id="photo_preview" class="mt-4 hidden items-start gap-3 rounded-lg border border-stone-200 bg-stone-50 p-3">
+      <img id="photo_thumb" alt="Selected photo" class="h-20 w-20 shrink-0 rounded-md border border-stone-200 object-cover">
+      <div class="min-w-0 flex-1">
+        <p id="photo_name" class="truncate text-sm font-medium text-stone-900"></p>
+        <p id="photo_size" class="mt-0.5 text-xs text-stone-500"></p>
+        <button type="button" id="photo_remove"
+                class="mt-2 min-h-9 rounded-md border border-stone-300 bg-white px-3 py-1.5 text-sm font-medium text-stone-700 hover:border-stone-900 hover:text-stone-900">
+          Remove photo
+        </button>
+      </div>
+    </div>
   </div>
 
   <div class="rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
@@ -61,6 +73,44 @@
       el.addEventListener("change", () => localStorage.setItem("rr_" + k, el.value));
     });
   } catch (e) { /* private browsing — fine, the form still works */ }
+
+  // Preview the chosen photo so a wrong one can be swapped before saving.
+  (function () {
+    const input = document.getElementById("photo");
+    const box = document.getElementById("photo_preview");
+    const thumb = document.getElementById("photo_thumb");
+    const name = document.getElementById("photo_name");
+    const size = document.getElementById("photo_size");
+    const hint = document.getElementById("photo_hint");
+    let url = null;
+
+    function clearPreview() {
+      if (url) { URL.revokeObjectURL(url); url = null; }
+      box.classList.add("hidden");
+      box.classList.remove("flex");
+      hint.classList.remove("hidden");
+      thumb.removeAttribute("src");
+    }
+
+    input.addEventListener("change", () => {
+      const file = input.files && input.files[0];
+      if (!file) { clearPreview(); return; }
+      if (url) URL.revokeObjectURL(url);
+      url = URL.createObjectURL(file);
+      thumb.src = url;
+      name.textContent = file.name;
+      size.textContent = (file.size / 1048576).toFixed(1) + " MB";
+      hint.classList.add("hidden");
+      box.classList.remove("hidden");
+      box.classList.add("flex");
+    });
+
+    document.getElementById("photo_remove").addEventListener("click", () => {
+      input.value = "";
+      clearPreview();
+      input.focus();
+    });
+  })();
 </script>
 
 {% endblock %}
