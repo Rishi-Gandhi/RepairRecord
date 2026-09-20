@@ -13,6 +13,7 @@ paperwork around a statute."
 RepairRecord produces documentation and a template. It is not legal advice.
 """
 
+import math
 from datetime import datetime, timedelta, timezone
 
 # Florida's residential landlord/tenant statute. §83.56(1) requires the tenant to
@@ -44,10 +45,7 @@ RE: Seven-Day Notice to Cure — {unit_address}
 
 Dear {landlord_name},
 
-I am the tenant at {unit_address}. I am writing to give you written notice of a
-condition described below. I believe it constitutes material noncompliance with
-the landlord's obligations under Fla. Stat. §83.51(1) or material provisions of
-our rental agreement.
+I am the tenant at {unit_address}. I am writing to give you written notice of a condition described below. I believe it constitutes material noncompliance with the landlord's obligations under Fla. Stat. §83.51(1) or material provisions of our rental agreement.
 
 DESCRIPTION OF THE PROBLEM
 
@@ -57,12 +55,9 @@ DESCRIPTION OF THE PROBLEM
 
 REQUEST
 
-Please correct the material noncompliance described above within {cure_days} days
-after delivery of this notice. If it is not corrected within that period, I
-intend to terminate the rental agreement because of that noncompliance.
+Please correct the material noncompliance described above within {cure_days} days after delivery of this notice. If it is not corrected within that period, I intend to terminate the rental agreement because of that noncompliance.
 
-Please contact me to arrange access for repairs and confirm when the work is
-complete. Arranging access does not replace correction of the condition.
+Please contact me to arrange access for repairs and confirm when the work is complete. Arranging access does not replace correction of the condition.
 
 You can reach me at {tenant_contact}.
 
@@ -75,10 +70,7 @@ Sincerely,
 Delivery method: {delivery_method}
 Statutory reference: {statute_cite}
 
-Template review: Before sending, confirm the facts, the applicable lease or
-maintenance obligation, and that you intend to terminate if it is not corrected.
-RepairRecord provides documentation and a template, not legal advice. For help,
-contact local legal aid or UF Student Legal Services if eligible.
+Template review: Before sending, confirm the facts, the applicable lease or maintenance obligation, and that you intend to terminate if it is not corrected. RepairRecord provides documentation and a template, not legal advice. For help, contact local legal aid or UF Student Legal Services if eligible.
 """
 
 HABITABILITY_PARAGRAPH = (
@@ -115,12 +107,7 @@ def render_letter(
 ) -> str:
     today = today or datetime.now(timezone.utc)
     return LETTER_TEMPLATE.format(
-<<<<<<< HEAD
-        today=(f"{today.strftime('%B')} {today.day}, {today.year}"
-               if hasattr(today, "strftime") else str(today)),
-=======
         today=f"{today:%B} {today.day}, {today.year}",
->>>>>>> c1d536ceb625e67142d6728764ad3525b52f1a44
         landlord_name=landlord_name or "[Landlord name]",
         landlord_address=landlord_address or "[Landlord address]",
         unit_address=unit_address or "[Unit address]",
@@ -155,7 +142,13 @@ def cure_deadline(sent_at_iso: str) -> str:
 
 
 def days_remaining(deadline_iso: str | None) -> int | None:
+    """Whole days left before the cure deadline, negative once it has passed.
+
+    Rounds away from zero: a notice delivered moments ago has the full 7 days
+    left, not 6. Flooring would under-report the time the landlord still has,
+    which is the wrong direction to be wrong in."""
     if not deadline_iso:
         return None
     delta = datetime.fromisoformat(deadline_iso) - datetime.now(timezone.utc)
-    return int(delta.total_seconds() // 86400)
+    days = delta.total_seconds() / 86400
+    return math.ceil(days) if days >= 0 else math.floor(days)

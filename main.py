@@ -106,6 +106,10 @@ def generate_notice(issue_id: str):
     issue = db.get(issue_id)
     if not issue:
         return HTMLResponse("Not found", status_code=404)
+    # Idempotent: a double-click must not append a second drafting event, and a
+    # delivered notice must keep the exact text that was delivered.
+    if issue["notice"]["letter_text"]:
+        return RedirectResponse(f"/issues/{issue_id}", status_code=303)
     issue["notice"]["letter_text"] = ai.draft_notice(issue)
     issue["notice"]["generated_at"] = db.now_iso()
     db.add_event(issue, "notice_generated", "7-day notice drafted")
@@ -118,6 +122,10 @@ def mark_sent(issue_id: str, delivery_method: str = Form(...)):
     issue = db.get(issue_id)
     if not issue:
         return HTMLResponse("Not found", status_code=404)
+    # The cure clock starts on first delivery and never restarts — re-submitting
+    # must not push the deadline later or duplicate the delivery event.
+    if issue["notice"]["sent_at"]:
+        return RedirectResponse(f"/issues/{issue_id}", status_code=303)
     sent_at = db.now_iso()
     issue["notice"]["delivery_method"] = delivery_method
     issue["notice"]["sent_at"] = sent_at

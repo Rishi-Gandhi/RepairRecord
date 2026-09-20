@@ -5,3 +5,5 @@ __pycache__/
 repairrecord.db
 uploads/*
 !uploads/.gitkeep
+desktop.ini
+.DS_Store

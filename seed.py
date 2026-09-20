@@ -60,21 +60,7 @@ SAMPLES = [
             degraded=False),
     ),
     dict(
-<<<<<<< HEAD
         photo="fixtures/photos/sample_leak.png",
-        description="Water coming through the ceiling in the bathroom, spreading stain, "
-                    "started three days ago after the upstairs unit's washer ran.",
-        classification=dict(category="plumbing", habitability=True, severity="high",
-                            rationale="An active water intrusion risks mold and structural damage.",
-                            factual_description=(
-                                "Water is entering through the bathroom ceiling of my unit. A stain "
-                                "has been spreading for approximately three days and began after "
-                                "the upstairs unit ran a washing machine. The affected area is "
-                                "visibly wet and discolored."),
-                            degraded=False),
-        stage="drafted",
-=======
-        photo="fixtures/photos/sample_leak.jpg",
         documented=dict(days=3, hours=5),
         drafted=dict(hours=20),
         description=(
@@ -90,7 +76,6 @@ SAMPLES = [
                 "The condition began after the upstairs unit operated a washing "
                 "machine. The affected area is visibly wet and discolored."),
             degraded=False),
->>>>>>> c1d536ceb625e67142d6728764ad3525b52f1a44
     ),
     dict(
         photo="fixtures/photos/sample_lock.jpg",

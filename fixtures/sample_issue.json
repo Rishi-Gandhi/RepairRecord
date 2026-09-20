@@ -19,7 +19,9 @@
     "category": "hvac",
     "habitability": true,
     "severity": "high",
-    "rationale": "Loss of cooling during extreme heat affects the habitability of the unit."
+    "rationale": "Loss of cooling during extreme heat affects the habitability of the unit.",
+    "factual_description": "The air conditioning unit in my apartment stopped producing cold air on September 11. The indoor temperature has been measured at 88 degrees Fahrenheit. I notified the management office by text message on September 11 and again on September 14 and have not received a response. The condition remains uncorrected.",
+    "degraded": false
   },
   "notice": {
     "letter_text": null,
