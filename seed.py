@@ -31,7 +31,7 @@ SAMPLES = [
         stage="sent",
     ),
     dict(
-        photo="fixtures/photos/sample_leak.jpg",
+        photo="fixtures/photos/sample_leak.png",
         description="Water coming through the ceiling in the bathroom, spreading stain, "
                     "started three days ago after the upstairs unit's washer ran.",
         classification=dict(category="plumbing", habitability=True, severity="high",

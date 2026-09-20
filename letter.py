@@ -100,7 +100,8 @@ def render_letter(
 ) -> str:
     today = today or datetime.now(timezone.utc)
     return LETTER_TEMPLATE.format(
-        today=today.strftime("%B %-d, %Y") if hasattr(today, "strftime") else str(today),
+        today=(f"{today.strftime('%B')} {today.day}, {today.year}"
+               if hasattr(today, "strftime") else str(today)),
         landlord_name=landlord_name or "[Landlord name]",
         landlord_address=landlord_address or "[Landlord address]",
         unit_address=unit_address or "[Unit address]",

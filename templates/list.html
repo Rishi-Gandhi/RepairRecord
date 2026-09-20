@@ -2,39 +2,57 @@
 {% block content %}
 
 <div class="flex items-center justify-between">
-  <h1 class="text-2xl font-semibold tracking-tight">My issues</h1>
-  <a href="/" class="rounded-lg bg-stone-900 px-3 py-2 text-sm font-medium text-white">New</a>
+  <div>
+    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">RepairRecord</p>
+    <h1 class="mt-1 text-2xl font-semibold tracking-tight">My issues</h1>
+  </div>
+  <a href="/" class="min-h-11 rounded-lg bg-stone-900 px-4 py-2.5 text-sm font-semibold text-white">New record</a>
 </div>
 
-<div class="mt-5 space-y-3">
+<p class="mt-2 text-sm leading-6 text-stone-600">Your documented repair problems and notice status.</p>
+
+<div class="mt-6 space-y-3">
   {% for issue in issues %}
     {% set n = issue.notice %}
     {% set days = n.cure_deadline | days_remaining %}
+    {% if days is not none %}
+      {% set status = "Cure period active" %}
+      {% set status_class = "bg-emerald-50 text-emerald-800 ring-emerald-200" %}
+    {% elif n.letter_text %}
+      {% set status = "Notice drafted" %}
+      {% set status_class = "bg-amber-50 text-amber-800 ring-amber-200" %}
+    {% else %}
+      {% set status = "Documented" %}
+      {% set status_class = "bg-stone-100 text-stone-700 ring-stone-200" %}
+    {% endif %}
     <a href="/issues/{{ issue.id }}"
-       class="flex gap-4 rounded-lg bg-white p-3 ring-1 ring-stone-200 hover:ring-stone-400">
+       class="group flex gap-4 rounded-xl border border-stone-200 bg-white p-3 shadow-sm hover:border-stone-400 sm:p-4">
       {% if issue.photos %}
         <img src="{{ issue.photos[0].path }}" alt=""
-             class="h-16 w-16 shrink-0 rounded object-cover">
+             class="h-20 w-20 shrink-0 rounded-lg object-cover">
       {% else %}
-        <div class="h-16 w-16 shrink-0 rounded bg-stone-100"></div>
+        <div class="h-20 w-20 shrink-0 rounded-lg bg-stone-100"></div>
       {% endif %}
       <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-2">
-          <span class="font-medium capitalize">{{ issue.classification.category|replace("_"," ") }}</span>
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="font-semibold capitalize">{{ issue.classification.category|replace("_"," ") }}</span>
           {% if issue.classification.habitability %}
-            <span class="rounded-full bg-red-100 px-2 py-0.5 text-[11px] text-red-800">Habitability</span>
+            <span class="rounded-full bg-red-50 px-2 py-0.5 text-[11px] font-medium text-red-800 ring-1 ring-red-200">Habitability</span>
           {% endif %}
         </div>
-        <p class="truncate text-sm text-stone-500">{{ issue.description }}</p>
-        <p class="mt-0.5 text-xs font-medium">
+        <p class="mt-1 line-clamp-2 text-sm leading-5 text-stone-500">{{ issue.description }}</p>
+        <div class="mt-2 flex flex-wrap items-center gap-2">
+          <span class="rounded-full px-2 py-1 text-[11px] font-semibold ring-1 {{ status_class }}">{{ status }}</span>
           {% if days is not none %}
-            Notice delivered · {{ days }} days until cure deadline
+            <span class="text-xs font-medium text-stone-600">{% if days < 0 %}{{ days|abs }} days overdue{% else %}{{ days }} days until deadline{% endif %}</span>
           {% elif n.letter_text %}
-            Notice drafted · not yet delivered
+            <span class="text-xs text-stone-500">Not yet delivered</span>
           {% else %}
-            Documented {{ issue.created_at[:10] }}
+            <span class="text-xs text-stone-500">{{ issue.created_at[:10] }}</span>
           {% endif %}
+        </div>
         </p>
+      <span class="hidden self-center text-xl text-stone-300 transition-colors group-hover:text-stone-700 sm:block" aria-hidden="true">&rarr;</span>
       </div>
     </a>
   {% else %}
