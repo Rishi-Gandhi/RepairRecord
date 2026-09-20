@@ -1,99 +1,142 @@
 {% extends "base.html" %}
 {% set n = issue.notice %}
 {% set c = issue.classification %}
+{% set deadline_days = n.cure_deadline | days_remaining %}
+{% set completed_steps = 4 if n.cure_deadline else 3 if n.sent_at else 2 if n.letter_text else 1 %}
 {% block content %}
 
-<a href="/issues" class="text-sm text-stone-500 hover:text-stone-900">&larr; All issues</a>
+<a href="/issues" class="inline-flex min-h-11 items-center text-sm font-medium text-stone-500 hover:text-stone-900">
+  &larr;&nbsp; All issues
+</a>
 
-<div class="mt-3 flex items-start justify-between gap-4">
-  <div>
-    <h1 class="text-2xl font-semibold tracking-tight capitalize">
-      {{ c.category|replace("_"," ") }} issue
-    </h1>
-    <p class="mt-1 text-sm text-stone-500">{{ issue.unit_address or "No address on file" }}</p>
+<div class="mt-4 border-b border-stone-200 pb-5">
+  <div class="flex items-start justify-between gap-4">
+    <div class="min-w-0">
+      <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Repair record</p>
+      <h1 class="mt-2 text-2xl font-semibold tracking-tight capitalize">
+        {{ c.category|replace("_"," ") }} issue
+      </h1>
+      <p class="mt-1 text-sm leading-6 text-stone-600">{{ issue.unit_address or "No address on file" }}</p>
+    </div>
+    {% if c.habitability %}
+      <span class="shrink-0 rounded-full bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-800 ring-1 ring-red-200">
+        Habitability
+      </span>
+    {% endif %}
   </div>
-  {% if c.habitability %}
-    <span class="shrink-0 rounded-full bg-red-100 px-3 py-1 text-xs font-medium text-red-800">
-      Habitability
-    </span>
-  {% endif %}
 </div>
 
-<!-- TIMELINE — PERSON A: this is the most explanatory element in the product. -->
-{% set deadline_days = n.cure_deadline | days_remaining %}
-<ol class="mt-6 flex items-center gap-2 text-xs">
-  {% set steps = [
-      ("Documented", true),
-      ("Notice drafted", n.letter_text is not none),
-      ("Notice delivered", n.sent_at is not none),
-      ("Cure deadline", n.cure_deadline is not none)
-  ] %}
-  {% for label, done in steps %}
-    <li class="flex flex-1 flex-col gap-1.5">
-      <div class="h-1.5 rounded-full {{ 'bg-stone-900' if done else 'bg-stone-200' }}"></div>
-      <span class="{{ 'font-medium text-stone-900' if done else 'text-stone-400' }}">{{ label }}</span>
-    </li>
-  {% endfor %}
-</ol>
-
-{% if deadline_days is not none %}
-  <div class="mt-4 rounded-lg border border-stone-900 bg-stone-900 p-4 text-white">
-    <div class="text-3xl font-semibold">{{ deadline_days }} days</div>
-    <div class="text-sm text-stone-300">
-      until the 7-day cure period ends
-      ({{ n.cure_deadline[:10] }}). Delivered by {{ n.delivery_method|lower }}.
+<!-- TIMELINE — the workflow's primary status surface. -->
+<section class="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm sm:p-5">
+  <div class="flex items-end justify-between gap-3">
+    <div>
+      <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">Progress</p>
+      <h2 class="mt-1 text-lg font-semibold">Your repair record</h2>
     </div>
+    <span class="shrink-0 text-xs font-medium text-stone-500">Step {{ completed_steps }} of 4</span>
   </div>
-{% endif %}
+
+  <ol class="mt-5 space-y-0">
+    {% set steps = ["Documented", "Notice drafted", "Notice delivered", "Cure deadline"] %}
+    {% for label in steps %}
+      {% set done = loop.index <= completed_steps %}
+      {% set active = loop.index == completed_steps %}
+      <li class="relative flex gap-3 {{ 'pb-5' if not loop.last else '' }}">
+        {% if not loop.last %}
+          <span class="absolute left-[0.6875rem] top-6 h-[calc(100%-0.75rem)] w-px {{ 'bg-stone-900' if loop.index < completed_steps else 'bg-stone-200' }}"></span>
+        {% endif %}
+        <span class="relative z-10 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold {{ 'bg-stone-900 text-white' if done else 'bg-stone-100 text-stone-400 ring-1 ring-stone-200' }}">
+          {{ '&#10003;'|safe if done else loop.index }}
+        </span>
+        <span class="pt-0.5">
+          <span class="block text-sm font-semibold {{ 'text-stone-900' if done else 'text-stone-400' }}">{{ label }}</span>
+          {% if active and loop.index == 1 %}
+            <span class="mt-0.5 block text-xs text-stone-500">Photo and description recorded.</span>
+          {% elif active and loop.index == 2 %}
+            <span class="mt-0.5 block text-xs text-stone-500">Ready to prepare your written notice.</span>
+          {% elif active and loop.index == 3 %}
+            <span class="mt-0.5 block text-xs text-stone-500">Record how you delivered the notice.</span>
+          {% elif active and loop.index == 4 %}
+            <span class="mt-0.5 block text-xs text-stone-500">The cure period is now running.</span>
+          {% endif %}
+        </span>
+      </li>
+    {% endfor %}
+  </ol>
+
+  {% if deadline_days is not none %}
+    <div class="mt-1 rounded-lg bg-stone-900 p-4 text-white">
+      <p class="text-3xl font-semibold tracking-tight">
+        {% if deadline_days < 0 %}{{ deadline_days|abs }} days overdue{% else %}{{ deadline_days }} days left{% endif %}
+      </p>
+      <p class="mt-1 text-sm leading-5 text-stone-300">
+        7-day cure period ends {{ n.cure_deadline[:10] }}.<br>
+        Delivered by {{ n.delivery_method|lower }}.
+      </p>
+    </div>
+  {% endif %}
+</section>
 
 <!-- EVIDENCE -->
-<section class="mt-6">
-  <h2 class="text-sm font-medium uppercase tracking-wide text-stone-500">Evidence</h2>
+<section class="mt-8">
+  <div class="flex items-baseline justify-between gap-3">
+    <h2 class="text-sm font-semibold uppercase tracking-[0.16em] text-stone-500">Evidence</h2>
+    <span class="text-xs text-stone-400">Server-recorded</span>
+  </div>
   {% for p in issue.photos %}
-    <figure class="mt-2 overflow-hidden rounded-lg border border-stone-200 bg-white">
-      <img src="{{ p.path }}" alt="Documented condition" class="w-full">
-      <figcaption class="border-t border-stone-100 p-3 text-xs text-stone-500">
-        Recorded by server {{ p.captured_at|replace("T"," ")|replace("+00:00"," UTC") }}
-        · SHA-256 {{ p.sha256[:16] }}…
+    <figure class="mt-3 overflow-hidden rounded-xl border border-stone-200 bg-stone-100 shadow-sm">
+      <div class="flex max-h-[26rem] items-center justify-center p-3 sm:max-h-[34rem]">
+        <img src="{{ p.path }}" alt="Documented condition" class="block max-h-[24rem] max-w-full object-contain sm:max-h-[32rem]">
+      </div>
+      <figcaption class="border-t border-stone-100 p-3 text-xs leading-5 text-stone-500">
+        Recorded {{ p.captured_at|replace("T"," ")|replace("+00:00"," UTC") }}<br>
+        SHA-256 {{ p.sha256[:16] }}…
       </figcaption>
     </figure>
   {% else %}
     <p class="mt-2 text-sm text-stone-500">No photo attached.</p>
   {% endfor %}
-  <p class="mt-3 rounded-lg bg-white p-3 text-sm ring-1 ring-stone-200">{{ issue.description }}</p>
+  <div class="mt-3 rounded-xl bg-stone-100 p-4">
+    <p class="text-xs font-semibold uppercase tracking-[0.16em] text-stone-500">What you reported</p>
+    <p class="mt-2 text-sm leading-6">{{ issue.description }}</p>
+  </div>
 </section>
 
 <!-- CLASSIFICATION -->
-<section class="mt-6 rounded-lg bg-white p-4 ring-1 ring-stone-200">
-  <h2 class="text-sm font-medium uppercase tracking-wide text-stone-500">Assessment</h2>
-  <p class="mt-2 text-sm">{{ c.rationale }}</p>
-  <p class="mt-1 text-xs text-stone-400">
+<section class="mt-6 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+  <h2 class="text-sm font-semibold uppercase tracking-[0.16em] text-stone-500">Assessment</h2>
+  <p class="mt-2 text-sm leading-6">{{ c.rationale }}</p>
+  <p class="mt-2 text-xs text-stone-400">
     Severity {{ c.severity }}{% if c.degraded %} · automatic classification unavailable, review before sending{% endif %}
   </p>
 </section>
 
 <!-- THE LETTER -->
-<section class="mt-6">
-  <h2 class="text-sm font-medium uppercase tracking-wide text-stone-500">7-day notice</h2>
+<section class="mt-8">
+  <div class="flex items-baseline justify-between gap-3">
+    <h2 class="text-sm font-semibold uppercase tracking-[0.16em] text-stone-500">7-day notice</h2>
+    {% if n.letter_text %}<span class="text-xs text-stone-400">Written notice</span>{% endif %}
+  </div>
   {% if n.letter_text %}
-    <pre class="mt-2 overflow-x-auto whitespace-pre-wrap rounded-lg border border-stone-300 bg-white p-5 font-mono text-[13px] leading-relaxed">{{ n.letter_text }}</pre>
+    <pre class="mt-3 overflow-x-auto whitespace-pre-wrap rounded-xl border border-stone-200 bg-[#fffdf8] p-5 font-serif text-[14px] leading-7 text-stone-800 shadow-sm">{{ n.letter_text }}</pre>
 
     {% if not n.sent_at %}
-      <form method="post" action="/issues/{{ issue.id }}/sent" class="mt-3 flex gap-2">
-        <select name="delivery_method" class="flex-1 rounded-lg border border-stone-300 p-2.5 text-sm">
+      <form method="post" action="/issues/{{ issue.id }}/sent" class="mt-4 space-y-3">
+        <label class="block text-xs font-semibold uppercase tracking-[0.16em] text-stone-500" for="delivery_method">How will you deliver it?</label>
+        <select id="delivery_method" name="delivery_method" class="min-h-11 w-full rounded-lg border border-stone-300 bg-white px-3 text-sm">
           {% for m in delivery_methods %}<option>{{ m }}</option>{% endfor %}
         </select>
-        <button class="rounded-lg bg-stone-900 px-4 py-2.5 text-sm font-medium text-white">
+        <button class="min-h-12 w-full rounded-lg bg-stone-900 px-4 py-3 text-sm font-semibold text-white hover:bg-stone-800">
           Mark delivered
         </button>
       </form>
-      <p class="mt-1 text-xs text-stone-500">
+      <p class="mt-2 text-xs leading-5 text-stone-500">
         The 7-day clock starts on delivery, not on the date the letter was written.
       </p>
     {% endif %}
   {% else %}
     <form method="post" action="/issues/{{ issue.id }}/notice" class="mt-2">
-      <button class="w-full rounded-lg bg-stone-900 px-4 py-3 font-medium text-white hover:bg-stone-800">
+      <button class="min-h-12 w-full rounded-lg bg-stone-900 px-4 py-3 font-semibold text-white hover:bg-stone-800">
         Draft the 7-day notice
       </button>
     </form>
@@ -101,17 +144,17 @@
 </section>
 
 <a href="/issues/{{ issue.id }}/packet.pdf"
-   class="mt-6 block rounded-lg border-2 border-stone-900 px-4 py-3.5 text-center font-medium hover:bg-stone-900 hover:text-white">
+  class="mt-6 block min-h-12 rounded-lg border-2 border-stone-900 px-4 py-3.5 text-center text-sm font-semibold hover:bg-stone-900 hover:text-white">
   Download evidence packet (PDF)
 </a>
 
 <!-- LOG -->
 <section class="mt-6">
-  <h2 class="text-sm font-medium uppercase tracking-wide text-stone-500">Record</h2>
-  <ul class="mt-2 space-y-1 text-sm text-stone-600">
+  <h2 class="text-sm font-semibold uppercase tracking-[0.16em] text-stone-500">Record</h2>
+  <ul class="mt-3 divide-y divide-stone-200 rounded-xl border border-stone-200 bg-white text-sm text-stone-600">
     {% for e in issue.events %}
-      <li class="flex gap-3">
-        <span class="w-36 shrink-0 tabular-nums text-stone-400">{{ e.at[:16]|replace("T"," ") }}</span>
+      <li class="flex flex-col gap-1 p-3 sm:flex-row sm:gap-3">
+        <span class="shrink-0 tabular-nums text-xs text-stone-400">{{ e.at[:16]|replace("T"," ") }}</span>
         <span>{{ e.note }}</span>
       </li>
     {% endfor %}

@@ -115,7 +115,12 @@ def render_letter(
 ) -> str:
     today = today or datetime.now(timezone.utc)
     return LETTER_TEMPLATE.format(
+<<<<<<< HEAD
+        today=(f"{today.strftime('%B')} {today.day}, {today.year}"
+               if hasattr(today, "strftime") else str(today)),
+=======
         today=f"{today:%B} {today.day}, {today.year}",
+>>>>>>> c1d536ceb625e67142d6728764ad3525b52f1a44
         landlord_name=landlord_name or "[Landlord name]",
         landlord_address=landlord_address or "[Landlord address]",
         unit_address=unit_address or "[Unit address]",
