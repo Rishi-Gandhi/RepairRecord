@@ -22,9 +22,9 @@ from datetime import datetime, timedelta, timezone
 STATUTE_CITE = "Fla. Stat. §83.56(1)"
 STATUTE_SUMMARY = (
     "Under Florida Statute §83.56(1), a tenant who believes the landlord has "
-    "materially failed to comply with §83.51(1) or the lease must deliver written "
-    "notice specifying the noncompliance and allow at least 7 days for the "
-    "landlord to correct it."
+    "materially failed to comply with §83.51(1) or material provisions of the lease "
+    "must deliver written notice specifying the noncompliance and the intention "
+    "to terminate, and allow 7 days after delivery for correction."
 )
 CURE_DAYS = 7
 
@@ -32,8 +32,7 @@ DELIVERY_METHODS = [
     "Hand delivery",
     "Mailed, U.S. first-class mail",
     "Mailed, certified mail with return receipt",
-    "Posted on the premises",
-    "Email (if the lease permits notice by email)",
+    "Email (with an agreement meeting Fla. Stat. §83.505)",
 ]
 
 LETTER_TEMPLATE = """{today}
@@ -41,12 +40,14 @@ LETTER_TEMPLATE = """{today}
 {landlord_name}
 {landlord_address}
 
-RE: Notice of Maintenance Defect and Request to Cure — {unit_address}
+RE: Seven-Day Notice to Cure — {unit_address}
 
 Dear {landlord_name},
 
 I am the tenant at {unit_address}. I am writing to give you written notice of a
-maintenance problem at the unit and to request that it be corrected.
+condition described below. I believe it constitutes material noncompliance with
+the landlord's obligations under Fla. Stat. §83.51(1) or material provisions of
+our rental agreement.
 
 DESCRIPTION OF THE PROBLEM
 
@@ -56,12 +57,12 @@ DESCRIPTION OF THE PROBLEM
 
 REQUEST
 
-I am requesting that this condition be repaired. {statute_summary} This letter is
-that written notice. Please correct the condition within {cure_days} days of
-receiving this letter, or contact me to arrange access to the unit.
+Please correct the material noncompliance described above within {cure_days} days
+after delivery of this notice. If it is not corrected within that period, I
+intend to terminate the rental agreement because of that noncompliance.
 
-Photographs documenting this condition, with the date and time each was recorded,
-are attached to this notice.
+Please contact me to arrange access for repairs and confirm when the work is
+complete. Arranging access does not replace correction of the condition.
 
 You can reach me at {tenant_contact}.
 
@@ -73,17 +74,31 @@ Sincerely,
 --
 Delivery method: {delivery_method}
 Statutory reference: {statute_cite}
+
+Template review: Before sending, confirm the facts, the applicable lease or
+maintenance obligation, and that you intend to terminate if it is not corrected.
+RepairRecord provides documentation and a template, not legal advice. For help,
+contact local legal aid or UF Student Legal Services if eligible.
 """
 
 HABITABILITY_PARAGRAPH = (
-    "I believe this condition affects the habitability of the unit and falls within "
-    "the landlord's maintenance obligations under Fla. Stat. §83.51(1)."
+    "This reported condition raises a concern about safe use of the unit."
 )
 
 FALLBACK_DESCRIPTION = (
-    "The tenant reports the following condition at the unit:\n\n{raw}\n\n"
-    "The condition remains uncorrected as of the date of this notice."
+    "I report the following condition at the unit:\n\n{raw}"
 )
+
+EMERGENCY_NOTICE = """DRAFT INCOMPLETE — review required before delivery.
+
+The notice could not be prepared. Complete the tenant and landlord information,
+property address, and a factual description before sending a notice. Confirm the
+applicable maintenance obligation and your intention to terminate if the material
+noncompliance is not corrected within seven days after delivery.
+
+RepairRecord provides documentation and a template, not legal advice.
+Contact local legal aid or UF Student Legal Services if eligible.
+"""
 
 
 def render_letter(
@@ -100,8 +115,12 @@ def render_letter(
 ) -> str:
     today = today or datetime.now(timezone.utc)
     return LETTER_TEMPLATE.format(
+<<<<<<< HEAD
         today=(f"{today.strftime('%B')} {today.day}, {today.year}"
                if hasattr(today, "strftime") else str(today)),
+=======
+        today=f"{today:%B} {today.day}, {today.year}",
+>>>>>>> c1d536ceb625e67142d6728764ad3525b52f1a44
         landlord_name=landlord_name or "[Landlord name]",
         landlord_address=landlord_address or "[Landlord address]",
         unit_address=unit_address or "[Unit address]",
