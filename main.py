@@ -21,6 +21,7 @@ app = FastAPI(title="RepairRecord")
 templates = Jinja2Templates(directory="templates")
 templates.env.filters["days_remaining"] = letter.days_remaining
 templates.env.filters["wrap"] = letter.wrap_for_print
+templates.env.filters["category"] = pdf.category_label
 
 os.makedirs(storage.UPLOAD_DIR, exist_ok=True)
 app.mount("/uploads", StaticFiles(directory=storage.UPLOAD_DIR), name="uploads")
@@ -135,8 +136,7 @@ def packet(request: Request, issue_id: str):
     issue = db.get(issue_id)
     if not issue:
         return HTMLResponse("Not found", status_code=404)
-    for p in issue.get("photos", []):
-        p["abs_path"] = storage.abs_path(p["path"])
+    pdf.prepare_photos(issue.get("photos", []))
     html = templates.get_template("packet.html").render(
         issue=issue, generated_at=db.now_iso(), statute=letter.STATUTE_SUMMARY
     )
